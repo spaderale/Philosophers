@@ -6,7 +6,7 @@
 #    By: abroslav <abroslav@student.42porto.com>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/18 20:51:19 by abroslav          #+#    #+#              #
-#    Updated: 2026/04/28 23:27:58 by abroslav         ###   ########.fr        #
+#    Updated: 2026/06/24 21:50:00 by abroslav         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -29,9 +29,9 @@ INCLUDES = -I$(INCLUDES_DIR)
 #sources
 SRCS = 	$(SRC_DIR)/main.c \
 	  	$(SRC_DIR)/setup.c \
-	  	$(SRC_DIR)/philosop.c \
-	 	$(SRC_DIR)/checker.c \
-	 	$(SRC_DIR)/commands.c \
+	  	$(SRC_DIR)/philosopher.c \
+	 	$(SRC_DIR)/monitor.c \
+	 	$(SRC_DIR)/actions.c \
 	 	$(SRC_DIR)/utils.c \
 
 #objects

@@ -6,13 +6,13 @@
 /*   By: abroslav <abroslav@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/18 18:47:09 by abroslav          #+#    #+#             */
-/*   Updated: 2026/04/19 17:58:42 by abroslav         ###   ########.fr       */
+/*   Updated: 2026/06/24 21:50:00 by abroslav         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-int	ft_atoi(const char *str)
+int	convert_string_to_integer(const char *str)
 {
 	int	result;
 	int	i;
@@ -25,46 +25,90 @@ int	ft_atoi(const char *str)
 		i++;
 	}
 	if (str[i] != '\0')
+	{
 		return (-1);
+	}
 	return (result);
 }
 
-long	get_timestamp(void)
+long	get_current_timestamp_ms(void)
 {
-	struct timeval	time;
+	struct timeval	current_time;
+	long			timestamp_milliseconds;
 
-	gettimeofday(&time, NULL);
-	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
+	gettimeofday(&current_time, NULL);
+	timestamp_milliseconds = (current_time.tv_sec * 1000)
+		+ (current_time.tv_usec / 1000);
+	return (timestamp_milliseconds);
 }
 
-long	elapsed_ms(long start)
+long	calculate_elapsed_time_ms(long start_point)
 {
-	return (get_timestamp() - start);
+	long	current_time;
+	long	elapsed_duration;
+
+	current_time = get_current_timestamp_ms();
+	elapsed_duration = current_time - start_point;
+	return (elapsed_duration);
 }
 
-void	safe_print(t_philo *philo, char *msg)
+void	thread_safe_display(
+	t_philosopher *philosopher,
+	char *message
+)
 {
-	pthread_mutex_lock(&philo->table->print_lock);
-	if (!is_dead(philo->table) || msg[0] == 'd')
-		printf("%ld %d %s\n", elapsed_ms(philo->table->start_time),
-			philo->id_philo, msg);
-	pthread_mutex_unlock(&philo->table->print_lock);
-}
+	long		elapsed_time;
+	int			is_dead_status;
+	int			can_display;
 
-void	smart_sleep(long ms, t_philo *philo)
-{
-	long	start;
-
-	start = get_timestamp();
-	while (elapsed_ms(start) < ms)
+	pthread_mutex_lock(&philosopher->table->display_lock);
+	is_dead_status = query_death_status(philosopher->table);
+	if (message[0] == 'd')
 	{
-		pthread_mutex_lock(&philo->table->dead_lock);
-		if (philo->table->dead)
+		can_display = 1;
+	}
+	else if (is_dead_status == 0)
+	{
+		can_display = 1;
+	}
+	else
+	{
+		can_display = 0;
+	}
+	if (can_display != 0)
+	{
+		elapsed_time = calculate_elapsed_time_ms(
+			philosopher->table->start_timestamp
+		);
+		printf("%ld %d %s\n",
+			elapsed_time,
+			philosopher->philosopher_index,
+			message);
+	}
+	pthread_mutex_unlock(&philosopher->table->display_lock);
+}
+
+void	precision_sleep(long milliseconds, t_philosopher *philosopher)
+{
+	long	start_time;
+	long	elapsed_time;
+	int	death_check;
+
+	start_time = get_current_timestamp_ms();
+	while (1)
+	{
+		elapsed_time = calculate_elapsed_time_ms(start_time);
+		if (elapsed_time >= milliseconds)
 		{
-			pthread_mutex_unlock(&philo->table->dead_lock);
+			break ;
+		}
+		pthread_mutex_lock(&philosopher->table->death_flag_lock);
+		death_check = philosopher->table->is_philosopher_dead;
+		pthread_mutex_unlock(&philosopher->table->death_flag_lock);
+		if (death_check != 0)
+		{
 			return ;
 		}
-		pthread_mutex_unlock(&philo->table->dead_lock);
 		usleep(500);
 	}
 }
