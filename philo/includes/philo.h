@@ -6,7 +6,7 @@
 /*   By: abroslav <abroslav@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/15 14:03:55 by abroslav          #+#    #+#             */
-/*   Updated: 2026/04/19 17:57:37 by abroslav         ###   ########.fr       */
+/*   Updated: 2026/06/24 21:50:00 by abroslav         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,63 +19,63 @@
 # include <pthread.h>
 # include <sys/time.h>
 
-typedef struct s_philo	t_philo;
+typedef struct s_philosopher	t_philosopher;
 
-typedef struct s_table
+typedef struct s_dining_table
 {
-	int				nbr_philos;
-	long			time_die;
-	long			time_eat;
-	long			time_sleep;
-	long			start_time;
-	int				must_eat;
-	int				dead;
-	int				meals_done;
-	pthread_mutex_t	dead_lock;
-	pthread_mutex_t	meals_lock;
-	pthread_mutex_t	print_lock;
-	pthread_mutex_t	*forks;
-	t_philo			*philos;
-}	t_table;
+	int				philosopher_count;
+	int				is_philosopher_dead;
+	int				total_meals_finished;
+	long			start_timestamp;
+	long			death_timeout_ms;
+	long			eating_duration_ms;
+	long			sleeping_duration_ms;
+	int				must_complete_meals;
+	pthread_mutex_t	death_flag_lock;
+	pthread_mutex_t	meals_completion_lock;
+	pthread_mutex_t	display_lock;
+	pthread_mutex_t	*fork_mutexes;
+	t_philosopher	*philosophers;
+}	t_dining_table;
 
-typedef struct s_philo
+typedef struct s_philosopher
 {
-	int				id_philo;
-	int				done_meals;
-	long			last_meal;
-	pthread_mutex_t	*fork_left;
-	pthread_mutex_t	*fork_right;
-	pthread_mutex_t	*meal_lock;
-	pthread_t		thread;
-	t_table			*table;
-}	t_philo;
+	int				philosopher_index;
+	int				total_meals_eaten;
+	long			last_eating_timestamp;
+	pthread_mutex_t	*left_fork;
+	pthread_mutex_t	*right_fork;
+	pthread_mutex_t	*meals_sync_lock;
+	pthread_t		execution_thread;
+	t_dining_table	*table;
+}	t_philosopher;
 
-/* ================= PHILOSOPHERS LIFE ========================= */
-void	grab_forks(t_philo *philo);
-void	release_forks(t_philo *philo);
-void	philo_eating(t_philo *philo);
+/* ================= PHILOSOPHER ACTIONS ========================= */
+void	acquire_forks_for_eating(t_philosopher *philosopher);
+void	release_forks_after_eating(t_philosopher *philosopher);
+void	execute_eating_phase(t_philosopher *philosopher);
 
-/* ================== SETUP & INIT ============================= */
-int		setup_philos(t_table *table);
-int		setup_mutex(t_table *table);
-int		parsing(t_table *table, int ac, char **av);
+/* ================== INITIALIZATION & SETUP ===================== */
+int		initialize_philosophers(t_dining_table *table);
+int		initialize_mutex_objects(t_dining_table *table);
+int		validate_and_parse_arguments(t_dining_table *table, int ac, char **av);
 
-/* =================== SIMULATION & MONITORING ================= */
-void	run_checker(t_table *table);
-int		check_death(t_philo *philo);
-int		is_dead(t_table *table);
+/* =================== MONITORING & DEATH DETECTION ============== */
+void	start_death_monitor(t_dining_table *table);
+int		check_philosopher_death(t_philosopher *philosopher);
+int		query_death_status(t_dining_table *table);
 
-/* =================== CLEANUP ================================  */
-void	cleanup(t_table *table);
+/* =================== RESOURCE CLEANUP ==========================  */
+void	destroy_and_free_resources(t_dining_table *table);
 
-/* =================== PHILOSOPHERS THREAD FUNCTION ============  */
-void	*philo_life(void *arg);
+/* =================== PHILOSOPHER THREAD ROUTINE ================  */
+void	*philosopher_routine(void *arg);
 
-/* ==================== UTILS ==================================  */
-int		ft_atoi(const char *str);
-long	get_timestamp(void);
-long	elapsed_ms(long start);
-void	smart_sleep(long ms, t_philo *philo);
-void	safe_print(t_philo *philo, char *msg);
+/* ==================== UTILITY FUNCTIONS ==========================  */
+int		convert_string_to_integer(const char *str);
+long	get_current_timestamp_ms(void);
+long	calculate_elapsed_time_ms(long start_point);
+void	precision_sleep(long milliseconds, t_philosopher *philosopher);
+void	thread_safe_display(t_philosopher *philosopher, char *message);
 
 #endif
