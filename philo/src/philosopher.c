@@ -50,7 +50,6 @@ static void	execute_thinking_phase(t_philosopher *philosopher)
 {
 	long		thinking_duration;
 	int			philosopher_count;
-	int			is_even_count;
 
 	thread_safe_display(philosopher, "is thinking");
 	philosopher_count = philosopher->table->philosopher_count;
@@ -58,7 +57,6 @@ static void	execute_thinking_phase(t_philosopher *philosopher)
 	{
 		return ;
 	}
-	is_even_count = 0;
 	thinking_duration = philosopher->table->eating_duration_ms * 2
 		- philosopher->table->sleeping_duration_ms;
 	if (thinking_duration < 0)
